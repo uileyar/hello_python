@@ -17,7 +17,7 @@ def md5checksum(filename):
     try:
         with open(filename, 'rb') as fp:
             while True:
-                blk = fp.read(1024 * 1024 * 1)
+                blk = fp.read(1024 * 1024 * 10)
                 if not blk: break
                 m.update(blk)
     # print m.hexdigest(), filename

@@ -3,6 +3,8 @@ import httplib2
 import json
 from util import *
 from compat import *
+import urllib2
+import urllib
 
 VIDEO_INFO = 'https://drive.google.com/get_video_info?docid='
 
@@ -24,42 +26,6 @@ _FORMATS_EXT = {
     '46': 'webm',
     '59': 'mp4',
 }
-
-
-def _download_info(id):
-    http = httplib2.Http(timeout=60)
-    video_info_url = VIDEO_INFO + id
-    print video_info_url
-    for retry in range(3):
-        try:
-            (resp, content) = http.request(video_info_url, "GET")
-            if resp['status'] != '200':
-                for (k, v) in resp.items():
-                    logging.error("%s: %s", k, v)
-                continue
-            return content
-        except Exception, e:
-            logging.error("fail:{0}".format(e))
-    return None
-
-
-def _parse_info(info):
-    video_info = compat_parse_qs(info)
-    print json.dumps(video_info, indent=2)
-    print video_info.get('title')
-    print _get_fmt(video_info)
-
-    encoded_url_map = video_info.get('url_encoded_fmt_stream_map', [''])[0]
-    for url_data_str in encoded_url_map.split(','):
-        url_data = compat_parse_qs(url_data_str)
-        #print url_data
-        type = _get_type(url_data)
-        if 'itag' not in url_data or 'url' not in url_data:
-            continue
-        format_id = url_data['itag'][0]
-        url = url_data['url'][0]
-        print format_id, type, url
-
 
 def mimetype2ext(mt):
     if mt is None:
@@ -126,12 +92,71 @@ def _get_fmt(video_info):
                     }
     return formats_spec
 
+
+def _parse_info(info):
+    video_info = compat_parse_qs(info)
+    print json.dumps(video_info, indent=2)
+    title = video_info.get('title')[0]
+    # _get_fmt(video_info)
+
+    encoded_url_map = video_info.get('url_encoded_fmt_stream_map', [''])[0]
+    for url_data_str in encoded_url_map.split(','):
+        url_data = compat_parse_qs(url_data_str)
+        print url_data_str
+        print url_data
+        type = _get_type(url_data)
+        if 'itag' not in url_data or 'url' not in url_data:
+            continue
+        format_id = url_data['itag'][0]
+        url = url_data['url'][0]
+        print format_id, type
+        if format_id == '18':
+            return url+'&'+urllib.urlencode({'title':title, 'type':type})
+
+
+def _download_info1(id):
+    http = httplib2.Http(timeout=60)
+    video_info_url = VIDEO_INFO + id
+    print video_info_url
+    for retry in range(3):
+        try:
+            (resp, content) = http.request(video_info_url, "GET")
+            if resp['status'] != '200':
+                for (k, v) in resp.items():
+                    logging.error("%s: %s", k, v)
+                continue
+            return content
+        except Exception, e:
+            logging.error("fail:{0}".format(e))
+    return None
+
+def _download_info(id):
+    video_info_url = VIDEO_INFO + id
+    print video_info_url
+    for retry in range(3):
+        try:
+            request = urllib2.Request(video_info_url)
+            #request.add_header('X-Forwarded-For', '181.160.5.10:443')
+            response = urllib2.urlopen(request)
+            return response.read()
+        except Exception, e:
+            logging.error("fail:{0}".format(e))
+    return None
+
+
 def main():
+    logging.config.fileConfig(os.path.join(os.path.dirname(__file__), './config/logging.ini'))
+
+    #print urllib.urlencode({'title':'223 444', 'type':'eer/mp4'})
     doc_id ='0B0VS8-zQCcJmNVU1QWdjam02RWs'
-    #content = _download_info(doc_id)
-    with open('./get_video_info', 'rb') as fp:
-        content = fp.read(1024 * 1024 * 10)
-    _parse_info(content)
+    #doc_id = '0B4hBlQRjwcR3Zzd2MVAwX1lKRk0'
+    content = _download_info(doc_id)
+    print content
+
+    #with open('./get_video_info_2', 'rb') as fp:
+    #    content = fp.read(1024 * 1024 * 10)
+    if content:
+        print _parse_info(content)
 
 
 

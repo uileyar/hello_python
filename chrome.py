@@ -2,19 +2,23 @@
 
 import time
 from splinter import Browser
+import os
+
+from splinter.request_handler.status_code import HttpResponseError
 
 
 def splinter(url):
     browser = Browser('chrome')
-    browser.visit(url)
-    time.sleep(5)
-
-    #browser.find_by_id('idInput').fill('******')
-    #browser.find_by_id('pwdInput').fill('******')
-    #browser.find_by_id('loginBtn').click()
-    #time.sleep(8)
+    try:
+        browser.visit(url)
+        if browser.status_code.is_success():
+            print 'success', browser.status_code.code
+    except Exception, e:
+        print e
+    #print browser.html
     browser.quit()
 
 if __name__ == '__main__':
-    websize3 = 'https://drive.google.com/get_video_info?docid=0B0VS8-zQCcJmSEtFU201VTFZQU0'
-    splinter(websize3)
+    url = 'https://drive.google.com/get_video_info?docid=0B0VS8-zQCcJmSEtFU201VTFZQU0'
+    #url = 'http://baidu.com'
+    splinter(url)

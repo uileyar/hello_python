@@ -1,4 +1,5 @@
 # coding:utf-8
+import glob
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -79,9 +80,17 @@ def load_json(file_path):
     return data
 
 
+def remove_files(path):
+    for fn in glob.glob(path):  # '*'代表匹配所有文件
+        if os.path.isdir(fn):  # 如果结果为文件夹
+            remove_files(fn)  # 递归
+        else:
+            print fn
+
 def main():
     # file_walk(ROOT_PATH)
-    print md5checksum('/data/Descendants of the Sun E01(Part 1)-360p.MP4')
+    remove_files('/home/john/Downloads/get_video_info*[!d]')
+    #print md5checksum('/data/Descendants of the Sun E01(Part 1)-360p.MP4')
     #print get_item_title('Heroes Reborn Season 1 E1-5-360p.MP4', FILE_TYPE_US_DRAMA)
     #print get_item_title('Heroes Reborn Season 1 E1&2-5-360p.MP4', FILE_TYPE_US_DRAMA)
 

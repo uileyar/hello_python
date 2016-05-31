@@ -13,10 +13,12 @@ class MyThread(threading.Thread):
 		self.threadID = threadID
 		self.name = name
 		self.q = q
+
 	def run(self):
 		print "Starting " + self.name
 		process_data(self.name, self.q)
 		print "Exiting " + self.name
+
 
 def process_data(threadName, q):
 	while  not exitFlag:

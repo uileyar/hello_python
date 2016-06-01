@@ -1,6 +1,8 @@
 # coding:utf-8
+import base64
 import glob
 import sys
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
 import hashlib
@@ -10,8 +12,47 @@ import logging.config
 
 import re
 import json
+from Crypto.Cipher import AES
 
-#logging.config.fileConfig(os.path.join(os.path.dirname(__file__), './config/logging.ini'))
+
+# logging.config.fileConfig(os.path.join(os.path.dirname(__file__), './config/logging.ini'))
+
+def sdk_decrypt(buf, key):
+    if not buf or not key:
+        return None
+    try:
+        cipher_text = base64.decodestring(buf)
+        if not cipher_text:
+            return None
+        cipher = AES.new(key, AES.MODE_CBC, key)
+        plain_text = cipher.decrypt(cipher_text)
+        if not plain_text:
+            return None
+        return plain_text.rstrip('\0')
+    except Exception as e:
+        return None
+
+
+def sdk_encrypt(text, key):
+    if not text or not key:
+        return None
+    try:
+        cipher = AES.new(key, AES.MODE_CBC, key)
+        length = 16
+        count = len(text)
+        if count < length:
+            add = (length - count)
+            # \0 backspace
+            text = text + (' ' * add)
+        elif count > length:
+            add = (length - (count % length))
+            text = text + ('\0' * add)
+        cipher_text = cipher.encrypt(text)
+        if not cipher_text:
+            return None
+        return base64.encodestring(cipher_text)
+    except Exception as e:
+        return None
 
 
 def md5checksum(filename):
@@ -54,16 +95,24 @@ def relative_file_path(abs_file_path, abs_dir):
     return rel_file_path
 
 
-def print_list(prefix_str,in_list):
+def print_map(prefix_str, in_map):
+    i = 1
+    for v in in_map:
+        logging.info('%s %d: %s: %s', prefix_str, i, v, in_map[v])
+        i += 1
+    logging.info('%s num = %d', prefix_str, len(in_map))
+
+
+def print_list(prefix_str, in_list):
     i = 1
     for v in in_list:
-        logging.info('%s %d:%s', prefix_str, i, v)
-        i+=1
+        logging.info('{0} {1}: {2}'.format(prefix_str, i, v))
+        i += 1
     logging.info('%s num = %d', prefix_str, len(in_list))
 
 
 def save_to_json(file_path, data):
-    f=open(file_path, 'wb')
+    f = open(file_path, 'wb')
     if not f:
         return
     f.write(json.dumps(data, sort_keys=True, indent=2))
@@ -71,12 +120,12 @@ def save_to_json(file_path, data):
 
 
 def load_json(file_path):
-    f=open(file_path)
+    f = open(file_path)
     if not f:
         return
     data = json.loads(f.read())
     f.close()
-    #b = json.loads('{"mimeType": "video/mp4", "name": "Yong-Pal Episode 1(Part 4)-360p.MP4", "webContentLink": "https://docs.google.com/uc?id=0B0VS8-zQCcJmZmo5TUJnRndnRGs&export=download", "parents": ["0B0VS8-zQCcJmSVlrNEd0QWt2bHc"], "shared": false, "id": "0B0VS8-zQCcJmZmo5TUJnRndnRGs", "md5Checksum": "3f1e406b0adaede73d59cf579cff8077"}')
+    # b = json.loads('{"mimeType": "video/mp4", "name": "Yong-Pal Episode 1(Part 4)-360p.MP4", "webContentLink": "https://docs.google.com/uc?id=0B0VS8-zQCcJmZmo5TUJnRndnRGs&export=download", "parents": ["0B0VS8-zQCcJmSVlrNEd0QWt2bHc"], "shared": false, "id": "0B0VS8-zQCcJmZmo5TUJnRndnRGs", "md5Checksum": "3f1e406b0adaede73d59cf579cff8077"}')
     return data
 
 
@@ -87,12 +136,13 @@ def remove_files(path):
         else:
             print fn
 
+
 def main():
     # file_walk(ROOT_PATH)
     remove_files('/home/john/Downloads/get_video_info*[!d]')
-    #print md5checksum('/data/Descendants of the Sun E01(Part 1)-360p.MP4')
-    #print get_item_title('Heroes Reborn Season 1 E1-5-360p.MP4', FILE_TYPE_US_DRAMA)
-    #print get_item_title('Heroes Reborn Season 1 E1&2-5-360p.MP4', FILE_TYPE_US_DRAMA)
+    # print md5checksum('/data/Descendants of the Sun E01(Part 1)-360p.MP4')
+    # print get_item_title('Heroes Reborn Season 1 E1-5-360p.MP4', FILE_TYPE_US_DRAMA)
+    # print get_item_title('Heroes Reborn Season 1 E1&2-5-360p.MP4', FILE_TYPE_US_DRAMA)
 
 
 if __name__ == '__main__':

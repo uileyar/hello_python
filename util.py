@@ -2,6 +2,7 @@
 import base64
 import glob
 import sys
+import time
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -135,6 +136,16 @@ def remove_files(path):
             remove_files(fn)  # 递归
         else:
             print fn
+
+
+def spend_time(func):
+    def new_func(*args, **args2):
+        t0 = time.time()
+        print("{} start".format(func.__name__))
+        back = func(*args, **args2)
+        print("{} end, spend {} s".format(func.__name__, time.time() - t0))
+        return back
+    return new_func
 
 
 def main():

@@ -18,7 +18,7 @@ def fibonacci_1(max_count=MAX_COUNT):
 
 
 def main():
-    print timeit.timeit(stmt=fibonacci_1, number=100)
+    print timeit.timeit(stmt=fibonacci_1, number=1)
 
 
 if __name__ == '__main__':
